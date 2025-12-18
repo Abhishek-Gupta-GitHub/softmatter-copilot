@@ -197,10 +197,29 @@ def _run_full_analysis(
 
     # 1) Quick stats + plan
     quick_stats = _orchestrator.compute_quick_stats(stack, meta)
+
+    quick_stats = _orchestrator.compute_quick_stats(stack, meta)
+
+    # Optional: ask the digital twin for parameter suggestions
+    twin_suggestion = None
     if use_twin_recommend:
-        twin_suggestion = _twin.recommend_parameters(meta, quick_stats)
-    else:
-        twin_suggestion = None
+        sample_config = getattr(config, "DEFAULT_SAMPLE_CONFIG", {
+            "domain": "colloidal_glass",
+            "volume_fraction": 0.45,
+            "particle_diameter_um": 1.0,
+        })
+        try:
+            # Most likely signature: (metadata, quick_stats, sample_config)
+            twin_suggestion = _twin.recommend_parameters(meta, quick_stats, sample_config)
+        except TypeError:
+            # If your DigitalTwin still has the older (meta, quick_stats) signature,
+            # fall back gracefully and ignore sample_config.
+            try:
+                twin_suggestion = _twin.recommend_parameters(meta, quick_stats)
+            except TypeError:
+                twin_suggestion = None
+
+
 
     plan: Plan = _orchestrator.make_plan(
         user_question=analysis_prompt,
@@ -518,3 +537,5 @@ def build_ui() -> gr.Blocks:
 if __name__ == "__main__":
     demo = build_ui()
     demo.launch()
+
+

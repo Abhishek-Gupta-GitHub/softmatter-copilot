@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 from typing import Dict, Any
+import numpy as np
 
 @dataclass
 class Plan:
@@ -51,3 +52,34 @@ class Orchestrator:
             tracking_params_initial=tracking_params_initial,
         )
 
+    def compute_quick_stats(self, stack, metadata):
+        """
+        Lightweight stats so the planner can reason about the dataset.
+        Compatible with both 3D (Z,Y,X) and 4D (T,Z,Y,X) stacks.
+        """
+        arr = np.asarray(stack)
+        ndim = arr.ndim
+
+        stats = {
+            "ndim": int(ndim),
+            "shape": tuple(int(s) for s in arr.shape),
+        }
+
+        if ndim == 4:
+            t, z, y, x = arr.shape
+            stats["n_frames"] = int(t)
+            stats["n_z"] = int(z)
+        elif ndim == 3:
+            z, y, x = arr.shape
+            stats["n_frames"] = 1
+            stats["n_z"] = int(z)
+        else:
+            stats["n_frames"] = 1
+            stats["n_z"] = 1
+
+        stats["mean_intensity"] = float(arr.mean())
+        stats["std_intensity"] = float(arr.std())
+        stats["min_intensity"] = float(arr.min())
+        stats["max_intensity"] = float(arr.max())
+
+        return stats

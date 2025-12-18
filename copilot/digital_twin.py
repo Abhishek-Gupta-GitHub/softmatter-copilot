@@ -505,112 +505,42 @@ class DigitalTwin:
             "contrast": contrast,
         }
 
-    def recommend_parameters(
-        self,
-        real_stack: np.ndarray,
-        base_microscope_config: Dict,
-        sample_config: Dict,
-        n_frames_test: int = 10,
-        dt: float = 0.1,
-        exposure_candidates_ms: Optional[List[float]] = None,
-        pinhole_factors: Optional[List[float]] = None,
-    ) -> Dict:
+    # 
+    def recommend_parameters(self, metadata, quick_stats, sample_config):
         """
-        Simple inverse-design helper:
-
-        - Compute metrics on the real (noisy) stack.
-        - Loop over candidate exposure times / pinhole factors.
-        - For each candidate:
-            * simulate a short stack,
-            * compute metrics,
-            * score similarity to a target (higher SNR, similar contrast).
-        - Return the best candidate and a human-readable summary.
-
-        This is deliberately simple and meant as a hook for GUI + LLM explanation.
+        Recommend detection/tracking parameters based on quick_stats
+        and sample_config. This version does NOT inspect the image stack
+        directly (avoids AttributeError on dict/stack mismatch).
         """
-        if exposure_candidates_ms is None:
-            exposure_candidates_ms = [5.0, 10.0, 20.0]
+        # Extract basic stats
+        n_frames = int(quick_stats.get("n_frames", 1))
+        mean_int = float(quick_stats.get("mean_intensity", 100.0))
+        std_int = float(quick_stats.get("std_intensity", 20.0))
 
-        if pinhole_factors is None:
-            pinhole_factors = [1.0, 0.7, 0.5]  # <1 = smaller pinhole
+        # Start from some defaults
+        detection = {
+            "diameter_px": 7,
+            "threshold": mean_int + 1.0 * std_int,
+            "minmass": mean_int * 0.5,
+        }
 
-        # Baseline metrics
-        real_metrics = self._compute_image_metrics(real_stack)
+        # Simple rule: if very noisy, increase threshold & minmass
+        if std_int > 0.4 * mean_int:
+            detection["threshold"] = mean_int + 1.5 * std_int
+            detection["minmass"] = mean_int * 0.8
 
-        best_score = -np.inf
-        best_cfg = None
+        # Tracking: scale search_range with expected motion and pixel size
+        pixel_size = float(metadata.get("pixel_size_um", 0.1))
+        frame_interval = float(metadata.get("frame_interval_s", 0.1))
+        # crude guess: Brownian motion scale
+        search_range = max(2, min(10, int(5 * pixel_size / frame_interval)))
 
-        for exp in exposure_candidates_ms:
-            for pinhole_factor in pinhole_factors:
-                # Copy and tweak microscope config
-                mc = dict(base_microscope_config)
-                mc["exposure_ms"] = exp
-                mc["pinhole_factor"] = pinhole_factor
-
-                # Simple heuristic: longer exposure => lower noise_std, larger mean
-                # Smaller pinhole => better axial sectioning but lower total photons; mimic via z_att + noise.
-                bleaching_cfg = {
-                    "z_att_um": float(mc.get("z_att_um", 50.0))
-                    * (1.2 if pinhole_factor < 1.0 else 1.0),
-                    "bleach_tau_s": float(mc.get("bleach_tau_s", 80.0)),
-                    "noise_std": float(mc.get("noise_std", 5.0))
-                    * (0.7 if exp > base_microscope_config.get("exposure_ms", 5.0) else 1.0),
-                }
-
-                sim_stack, _ = self.simulate(mc, sample_config, n_frames_test, dt, bleaching_cfg)
-                sim_metrics = self._compute_image_metrics(sim_stack)
-
-                # Score: reward higher SNR than real, and similar contrast
-                snr_gain = sim_metrics["snr"] - real_metrics["snr"]
-                contrast_diff = abs(sim_metrics["contrast"] - real_metrics["contrast"])
-                score = snr_gain - 0.5 * contrast_diff
-
-                if score > best_score:
-                    best_score = score
-                    best_cfg = {
-                        "exposure_ms": exp,
-                        "pinhole_factor": pinhole_factor,
-                        "sim_metrics": sim_metrics,
-                    }
-
-        if best_cfg is None:
-            return {
-                "recommendation": "No improvement found (check digital twin settings).",
-                "details": {},
-            }
-
-        base_exp = base_microscope_config.get("exposure_ms", exposure_candidates_ms[0])
-        base_pinhole = base_microscope_config.get("pinhole_factor", 1.0)
-
-        # Build human-readable recommendation string
-        rec_lines = []
-        if best_cfg["exposure_ms"] > base_exp:
-            rec_lines.append(
-                f"Increase exposure from {base_exp:.1f} ms to {best_cfg['exposure_ms']:.1f} ms "
-                f"to boost SNR."
-            )
-        elif best_cfg["exposure_ms"] < base_exp:
-            rec_lines.append(
-                f"Decrease exposure from {base_exp:.1f} ms to {best_cfg['exposure_ms']:.1f} ms "
-                f"to reduce bleaching at the cost of SNR."
-            )
-
-        if best_cfg["pinhole_factor"] < base_pinhole:
-            rec_lines.append(
-                "Reduce pinhole size (pinhole_factor < 1) for better axial sectioning, "
-                "expect slightly lower signal."
-            )
-        elif best_cfg["pinhole_factor"] > base_pinhole:
-            rec_lines.append(
-                "Increase pinhole size (pinhole_factor > 1) for more photons at the cost of sectioning."
-            )
-
-        if not rec_lines:
-            rec_lines.append("Current settings are near optimal under this twin model.")
+        tracking = {
+            "search_range": search_range,
+            "memory": 1 if n_frames < 100 else 2,
+        }
 
         return {
-            "recommendation": " ".join(rec_lines),
-            "base_metrics": real_metrics,
-            "best_candidate": best_cfg,
-            "score": float(best_score),
+            "detection_params": detection,
+            "tracking_params": tracking,
         }

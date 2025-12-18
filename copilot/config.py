@@ -17,3 +17,9 @@ DEFAULT_META = {
     "box_size_um": [30.0, 30.0, 30.0],
 }
 
+DEFAULT_SAMPLE_CONFIG = {
+    "domain": "colloidal_glass",
+    "volume_fraction": 0.45,
+    "particle_diameter_um": 1.0,
+}
+
