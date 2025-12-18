@@ -1,0 +1,12 @@
+{
+  "description": "Confocal z-series stack from ImageJ demo images (e.g., C. elegans embryo).",
+  "source": "ImageJ public demo images.",
+  "url": "https://imagej.net/plugins/public-data-sets",
+  "pixel_size_xy_um": 1.0,
+  "z_step_um": 1.0,
+  "frame_interval_s": null,
+  "approx_particle_diameter_um": 2.0,
+  "sample_type": "confocal z-series (biology)",
+  "dimensions": "3D",
+  "notes": "Unzip to get individual TIFF slices; stack them in your loader."
+}
