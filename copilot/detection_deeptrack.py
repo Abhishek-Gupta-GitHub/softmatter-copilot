@@ -45,8 +45,9 @@ class DeepTrackDetector:
         otherwise falls back to a Gaussian-blob generator.
         """
         H, W = self.cfg.image_shape
-        if not self.available:
-            return self._fallback_synthetic_2d_t(n_frames, H, W)
+        # if not self.available:
+        #     return self._fallback_synthetic_2d_t(n_frames, H, W)
+        return self._fallback_synthetic_2d_t(n_frames, H, W)
 
         # Minimal DeepTrack-style pipeline: PointParticle + noise + PSF
         particle = dt.features.PointParticle(
