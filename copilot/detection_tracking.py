@@ -3,7 +3,10 @@
 import pandas as pd
 import numpy as np
 import trackpy as tp
-from copilot.trajectory_schema import Trajectory 
+
+from src.analysis.physics_analyst_basic import Trajectory
+from copilot.detection_deeptrack import DeepTrackDetector, DeepTrackConfig
+
 
 class DetectionTrackingWorker:
     def __init__(self):
