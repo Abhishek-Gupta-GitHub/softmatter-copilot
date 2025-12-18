@@ -1,5 +1,6 @@
 import numpy as np
 import trackpy as tp
+import pandas as pd
 
 class PhysicsAnalyst:
     def __init__(self):
@@ -55,6 +56,39 @@ class PhysicsAnalyst:
         if not nndists:
             return {"mean_nn": None, "n_points": 0}
         return {"mean_nn": float(np.mean(nndists)), "n_points": len(nndists)}
+    
+    import trackpy as tp
+
+    def _prepare_for_msd(traj: pd.DataFrame) -> pd.DataFrame:
+        # only keep necessary columns
+        cols = [c for c in ["particle", "frame", "x", "y", "z"] if c in traj.columns]
+        df = traj[cols].copy()
+
+        # sort and drop any exact duplicates
+        df = df.sort_values(["particle", "frame"]).drop_duplicates(
+            subset=["particle", "frame"]
+        )
+
+        # OPTIONAL: reindex particles densely (0..N-1)
+        new_ids = {old: i for i, old in enumerate(df["particle"].unique())}
+        df["particle"] = df["particle"].map(new_ids)
+
+        return df
+
+    def compute_emsd(traj: pd.DataFrame, mpp: float, fps: float, max_lag=100):
+        df = _prepare_for_msd(traj)
+
+        # final sanity check: if any (frame, particle) duplicates remain, abort gracefully
+        dup = df.duplicated(subset=["particle", "frame"])
+        if dup.any():
+            raise RuntimeError(
+                f"Still have duplicate (particle, frame) rows: {dup.sum()} duplicates."
+            )
+
+        # standard trackpy call
+        em = tp.emsd(df, mpp=mpp, fps=fps, max_lagtime=max_lag, detail=False)
+        return em
+
 
     def summarize(self, trajectories, stack_3d, metadata):
         frame_interval_s = float(metadata.get("frame_interval_s", 0.1))

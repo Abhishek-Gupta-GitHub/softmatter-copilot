@@ -249,6 +249,35 @@ def make_annotated_montage(stack_3d, trajectories, n_frames: int = 3):
     fig.tight_layout()
     return fig
 
+def relabel_segments_unique(df: pd.DataFrame, max_frame_gap: int = 1) -> pd.DataFrame:
+    """Ensure each contiguous segment gets a unique particle ID."""
+    if df is None or len(df) == 0:
+        return df
+
+    df = df.sort_values(["particle", "frame"]).reset_index(drop=True)
+
+    new_ids = np.empty(len(df), dtype=int)
+    next_id = 0
+
+    for pid, g in df.groupby("particle", sort=False):
+        frames = g["frame"].to_numpy()
+        # start of a new segment: first frame or a gap > max_frame_gap
+        segment_starts = np.zeros(len(frames), dtype=bool)
+        segment_starts[0] = True
+        segment_starts[1:] = (frames[1:] - frames[:-1]) > max_frame_gap
+
+        # cumulative count of segments within this original pid
+        seg_labels = np.cumsum(segment_starts)
+
+        for seg in np.unique(seg_labels):
+            idx_seg = g.index[seg_labels == seg]
+            new_ids[idx_seg] = next_id
+            next_id += 1
+
+    df = df.copy()
+    df["particle"] = new_ids
+    return df
+
 
 def make_trajectory_plot(trajectories):
     if trajectories is None or len(trajectories) == 0:
@@ -285,6 +314,9 @@ def run_detection_tracking(stack_3d, plan, backend: str):
         trajectories = pd.DataFrame(traj)
     else:
         trajectories = traj
+
+    if trajectories is not None and len(trajectories) > 0:
+        trajectories = relabel_segments_unique(trajectories, max_frame_gap=1)
     return trajectories, quality
 
 
@@ -635,10 +667,10 @@ with gr.Blocks(css=custom_css) as demo:
         with gr.Column(scale=2):
             
 
-            with gr.Tab("Raw montage"):
-                raw_plot = gr.Plot(visible=True)
-            with gr.Tab("Annotated montage"):
-                ann_plot = gr.Plot(visible=True)
+            with gr.Tab("Montages"):
+                with gr.Row():
+                    raw_plot = gr.Plot(label="Raw", visible=True)
+                    ann_plot = gr.Plot(label="Annotated", visible=True)
             with gr.Tab("Trajectories"):
                 traj_plot = gr.Plot(visible=True)
             with gr.Tab("MSD"):
