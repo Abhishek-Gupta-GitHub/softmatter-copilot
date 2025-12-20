@@ -22,24 +22,24 @@ The main entry point for end users is `ui_demo_final.py`, which starts an intera
 
 1. **Clone the repository**
 
-'''
+```python
 git clone https://github.com/Abhishek-Gupta-GitHub/confocal_microscopy-copilot.git
 cd confocal_microscopy-copilot
-'''
+```
 
 2. **Create and activate a virtual environment** (recommended)
-'''
+```python
 python -m venv .venv
 source .venv/bin/activate # on Linux/macOS
 
 .venv\Scripts\activate # on Windows
-'''
+```
 
 3. **Install Python dependencies**
 
-'''
+```python
 pip install -r requirements.txt
-'''
+```
 
 If `requirements.txt` is not present or is incomplete, install the packages mentioned in the code (for example: `numpy`, `matplotlib`, `pillow`, `opencv-python`, `tifffile`, a GUI framework such as `PyQt5` or `PySide6`, and any LLM client libraries you plan to use).  
 
@@ -49,9 +49,9 @@ If `requirements.txt` is not present or is incomplete, install the packages ment
 
 To start the graphical user interface:
 
-'''
+```python
 python ui_demo_final.py
-'''
+```
 
 Typical workflow in the UI:
 
