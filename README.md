@@ -1,3 +1,57 @@
+## Confocal Microscopy Copilot
+
+Confocal Microscopy Copilot is a **Python** toolkit and user interface for loading, exploring and processing confocal microscopy image stacks, with optional integration of large language models (LLMs) for assisted analysis and documentation.  
+
+The main entry point for end users is `ui_demo_final.py`, which starts an interactive GUI.
+
+---
+
+## Features
+
+- Load common confocal microscopy image formats (e.g. multi‑channel and z‑stack images).  
+- Basic preprocessing utilities (normalization, cropping, projections, etc.).  
+- Interactive GUI for browsing slices, channels and simple analysis workflows via `ui_demo_final.py`.  
+- Optional LLM integration (e.g. OpenAI, Anthropic, etc.) for:
+  - Natural‑language description of images or ROIs  
+  - Drafting analysis notes, methods text or processing recipes  
+  - Turning GUI actions into reproducible code snippets  
+
+---
+
+## Installation
+
+1. **Clone the repository**
+
+'''
+git clone https://github.com/Abhishek-Gupta-GitHub/confocal_microscopy-copilot.git
+cd confocal_microscopy-copilot
+'''
+
+2. **Create and activate a virtual environment** (recommended)
+'''
+python -m venv .venv
+source .venv/bin/activate # on Linux/macOS
+
+.venv\Scripts\activate # on Windows
+'''
+
+3. **Install Python dependencies**
+
+'''
+pip install -r requirements.txt
+'''
+
+If `requirements.txt` is not present or is incomplete, install the packages mentioned in the code (for example: `numpy`, `matplotlib`, `pillow`, `opencv-python`, `tifffile`, a GUI framework such as `PyQt5` or `PySide6`, and any LLM client libraries you plan to use).  
+
+---
+
+## Running the UI (`ui_demo_final.py`)
+
+To start the graphical user interface:
+
+'''
+python ui_demo_final.py
+'''
 
 Typical workflow in the UI:
 
