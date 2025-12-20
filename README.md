@@ -47,13 +47,31 @@ python ui_demo_final.py
 
 5. **In the UI you can**
 
-- Load an example confocal stack or upload your own 3D/4D dataset.    
-- Enter basic metadata (voxel size, frame interval, etc.).  
-- Run:
+- **Open the local app**  
+  - After running `python ui_demo_final.py`, a temporary local URL (e.g. `http://127.0.0.1:7860` or similar) will appear in the terminal.  
+  - Click that link or paste it into your browser to access the interface.
+
+- **Load data and basic metadata**  
+  - Load an example confocal stack or upload your own 3D/4D dataset.  
+  - Enter basic metadata such as voxel size, frame interval, and other acquisition parameters.
+
+- **Choose analysis options**  
+  - Select a tracking backend (e.g. Trackpy or other available methods).  
+  - Provide an optional natural‑language prompt describing your analysis goal (e.g. “estimate diffusion in the z‑direction and check for bleaching”). [file:70]  
+  - Toggle expert/advanced options, such as:
+    - Using or comparing against the physics‑informed digital twin.  
+    - Enabling advanced diagnostics (depth‑dependent intensity profiles, crowding metrics).  
+    - Choosing an LLM backend (if configured) for richer explanations or planning.
+
+- **Run analysis**  
   - Particle detection and tracking.  
   - MSD and anomalous‑diffusion analysis.  
-  - Imaging diagnostics (photobleaching curves, depth‑dependent intensity, crowding metrics).  
-- View plots and an explanation panel that summarises the results and highlights possible limitations or follow‑up experimental changes.  
+  - Imaging diagnostics (photobleaching curves, depth‑dependent intensity, crowding metrics). [file:70]
+
+- **Inspect results and explanations**  
+  - View plots of trajectories, MSDs, diagnostics, and fitted parameters.  
+  - Read an explanation panel that summarises the results, flags possible limitations (e.g. short tracks, strong bleaching), and suggests follow‑up experimental changes.
+ 
 
 ---
 
